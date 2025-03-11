@@ -76,6 +76,7 @@
         .notes-container {
             display: none;
             padding-bottom: 50px;
+            margin-bottom: 20px;
         }
 
         .mcq-options {
@@ -87,16 +88,24 @@
 }
         }
 
+        #notes-card {
+            height: 400px
+        }
+
         .btn-option {
             width: 100%;
             margin: 5px 0;
+        }
+
+        p {
+            margin-bottom: 0;
         }
 
         footer {
             background-color: #111;
             color: white;
             text-align: center;
-            padding-top: 10px;
+            padding: 10px;
             position: fixed;
             bottom: 0;
             width: 100%;
@@ -143,7 +152,7 @@
     </div>
 
     <div class="container notes-container">
-        <div class="card shadow p-4">
+        <div class="card shadow p-4" id="notes-card">
             <h5 id="notes-title" class="text-center"></h5>
             <p id="notes-summary" class="text-center mt-3"></p>
         </div>
