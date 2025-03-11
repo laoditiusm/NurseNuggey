@@ -21,6 +21,9 @@
             perspective: 1000px;
         }
 
+        #mcq-card {
+            height: fit-content;
+        }
         .card {
             width: 100%;
             height: 350px;
@@ -72,11 +75,16 @@
         .mcq-container,
         .notes-container {
             display: none;
+            padding-bottom: 50px;
         }
 
         .mcq-options {
-            display: grid;
-            gap: 10px;
+            .mcq-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Optional, adds space between buttons */
+    overflow: auto; /* Prevents overflow if there's too much content */
+}
         }
 
         .btn-option {
@@ -125,7 +133,7 @@
     </div>
 
     <div class="container mcq-container">
-        <div class="card shadow p-4">
+        <div class="card shadow p-4" id="mcq-card">
             <h5 id="mcq-question" class="text-center"></h5>
             <div id="mcq-options" class="mcq-options mt-3"></div>
         </div>
@@ -353,6 +361,8 @@
         function showMCQ() {
             document.querySelector(".definitions-container").style.display = "none";
             document.querySelector(".mcq-container").style.display = "block";
+            document.querySelector(".mcq-container").style.height = 'fit-content';
+
             document.querySelector(".notes-container").style.display = "none";
             document.getElementById("btn-mcq").classList.add("active");
             document.getElementById("btn-definitions").classList.remove("active");
