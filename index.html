@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NurseNuggey</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            background-color: #e3f2fd;
+        }
+
+        .container {
+            max-width: 600px;
+            margin-top: 50px;
+        }
+
+        .card-container {
+            perspective: 1000px;
+        }
+
+        .card {
+            width: 100%;
+            height: 350px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .btn-danger {
+            color: #fff;
+        }
+
+        .btn-success {
+            color: #fff;
+        }
+
+        .card .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            border-radius: 10px;
+        }
+
+        .card .front {
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .card .back {
+            background-color: #007bff;
+            color: white;
+            transform: rotateY(180deg);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .mcq-container,
+        .notes-container {
+            display: none;
+        }
+
+        .mcq-options {
+            display: grid;
+            gap: 10px;
+        }
+
+        .btn-option {
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        footer {
+            background-color: #111;
+            color: white;
+            text-align: center;
+            padding-top: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-light bg-primary p-3">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white fw-bold">NurseNuggey👩‍⚕️</a>
+        </div>
+    </nav>
+
+    <div class="container text-center">
+        <div class="btn-group mb-3">
+            <button class="btn btn-outline-primary active" id="btn-definitions"
+                onclick="showDefinitions()">Definitions</button>
+            <button class="btn btn-outline-primary" id="btn-mcq" onclick="showMCQ()">MCQ</button>
+            <button class="btn btn-outline-primary" id="btn-notes" onclick="showNotes()">Notes</button>
+        </div>
+    </div>
+
+    <div class="container definitions-container">
+        <div class="card-container" onclick="flipCard()">
+            <div class="card" id="flashcard">
+                <div class="card-face front" id="question">Click to reveal the answer</div>
+                <div class="card-face back" id="answer"></div>
+            </div>
+        </div>
+        <div class="text-center mt-3">
+            <button class="btn btn-primary" onclick="loadQuestion()">Next</button>
+        </div>
+    </div>
+
+    <div class="container mcq-container">
+        <div class="card shadow p-4">
+            <h5 id="mcq-question" class="text-center"></h5>
+            <div id="mcq-options" class="mcq-options mt-3"></div>
+        </div>
+        <div class="text-center mt-3">
+            <button class="btn btn-primary" onclick="loadMCQ()">Next</button>
+        </div>
+    </div>
+
+    <div class="container notes-container">
+        <div class="card shadow p-4">
+            <h5 id="notes-title" class="text-center"></h5>
+            <p id="notes-summary" class="text-center mt-3"></p>
+        </div>
+        <div class="text-center mt-3">
+            <button class="btn btn-primary" onclick="loadNotes()">Next</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>First Year 2025. You Got This. I love you❤️</p>
+    </footer>
+
+    <script>
+        const definitions = [
+            { term: "Hemoglobin", definition: "A protein in red blood cells that carries oxygen." },
+            { term: "Hypertension", definition: "A condition in which blood pressure is consistently too high." },
+            { term: "Tachycardia", definition: "A heart rate that exceeds the normal resting rate." },
+            { term: "Health", definition: "A state of complete physical, mental, and social well-being, not merely the absence of disease or infirmity (WHO)." },
+            { term: "Health Promotion", definition: "Strategies and behaviors aimed at increasing well-being and preventing illness in individuals, groups, and communities." },
+            { term: "Wellness", definition: "A dynamic state of well-being where an individual experiences a sense of balance and comfort in physical, mental, emotional, and social aspects of life." },
+            { term: "Illness", definition: "A state in which an individual perceives themselves as unwell, which may be due to disease, discomfort, or psychological distress." },
+            { term: "Lifespan", definition: "The entire duration of an individual's life from conception to death, including various developmental stages." },
+            { term: "Multidisciplinary Team (MDT)", definition: "A collaborative healthcare team consisting of professionals from different disciplines (e.g., nurses, doctors, therapists) working together to improve patient care." },
+            { term: "Nursing Profession", definition: "A specialized occupation requiring expert knowledge, skills, and ethical practice, guided by a legal framework." },
+            { term: "Ethics", definition: "Moral principles that guide nursing behavior and decision-making in healthcare." },
+            { term: "Nursing Model", definition: "A structured representation of nursing concepts, showing relationships and patterns in care." },
+            { term: "Nursing Theory", definition: "A set of interrelated concepts that provide a framework for understanding nursing practice and patient care." },
+            { term: "Florence Nightingale’s Environmental Theory", definition: "Focuses on how the environment affects patient health, emphasizing hygiene, fresh air, clean water, and sanitation." },
+            { term: "Jean Watson’s Theory of Human Caring", definition: "Highlights the importance of human connection and caring in the healing process." },
+            { term: "Dorothea Orem’s Self-Care Deficit Nursing Theory", definition: "States that nurses assist individuals who are unable to meet their self-care needs." },
+            { term: "Hildegard Peplau’s Interpersonal Theory", definition: "Describes nursing as a therapeutic relationship between the nurse and patient that helps improve mental health." },
+            { term: "Madeleine Leininger’s Transcultural Nursing Theory", definition: "Emphasizes culturally competent care and understanding different cultural health practices." },
+            { term: "Health Models", definition: "Health models help in understanding different perspectives on health and disease." },
+            { term: "Biomedical Model", definition: "Views health as the absence of disease and focuses on biological factors." },
+            { term: "Biopsychosocial Model", definition: "Considers biological, psychological, and social factors in health and disease." },
+            { term: "Holistic Health Model", definition: "Emphasizes the connection between mind, body, and spirit, focusing on overall well-being." },
+            { term: "Health Belief Model (HBM)", definition: "Explains health behaviors based on individuals’ perceptions of risk, benefits, and barriers to health actions." },
+            { term: "Social-Ecological Model", definition: "Recognizes the impact of individual, interpersonal, community, and societal factors on health." },
+            { term: "Physical Wellness", definition: "Maintaining a healthy body through exercise, nutrition, and medical care." },
+            { term: "Emotional Wellness", definition: "Managing stress and expressing emotions effectively." },
+            { term: "Social Wellness", definition: "Building healthy relationships and social networks." },
+            { term: "Intellectual Wellness", definition: "Engaging in lifelong learning and problem-solving." },
+            { term: "Spiritual Wellness", definition: "Finding purpose and meaning in life." },
+            { term: "Occupational Wellness", definition: "Finding satisfaction in one’s work and career." },
+            { term: "Environmental Wellness", definition: "Living in a healthy and sustainable environment." },
+            { term: "Nursing", definition: "The focus of nursing includes health promotion and well-being, prevention as well as control of chronic conditions. Nursing has progressed from nurturing the sick and needy to professionally catering for all the health needs of all people. Its four broad aims are to promote health, prevent ill health, restore health, and promote coping rehabilitation after radical health changes." },
+            { term: "Nursing as a Science", definition: "Nursing as a science is based on a body of knowledge that can be applied in the clinical setting and which is continually expanded by ongoing research." },
+            { term: "Nurse", definition: "A nurse means someone who tended or nourished the young, sick, or infirm. Today the definition is wider but nurturing and caring remain at the core of nursing." },
+            { term: "Caring in Nursing", definition: "Nurses have a duty of care to patients and visitors. This is the legal obligation to take reasonable care to avoid causing harm to a person." },
+            { term: "Holistic Nursing Care", definition: "Considers a patient’s physical, social, spiritual, and psychological dimensions, as well as cultural and religious aspects." },
+            { term: "Caring in Holistic Nursing", definition: "Caring that involves looking after the whole person is holistic and healing and based on the principles of humanism." },
+            { term: "Culturally Sensitive Nursing Care", definition: "The needs of a patient must be met in a culturally appropriate manner, or at least show respect for the patient’s culture." },
+            { term: "The Helping (Therapeutic) Relationship", definition: "Foundation on which nurse and patient can work in alliance to identify issues affecting health and well-being." },
+            { term: "Patient/Client", definition: "The person, a patient or client, health consumer, human being, individual or other is the important reason for the existence of nursing practice." },
+            { term: "Health and Wellness", definition: "Health is multidimensional, composed of different but interrelated dimensions, including physical, mental, environmental, social, spiritual, and societal well-being." },
+            { term: "Wellness", definition: "Wellness is an ongoing process that leads an individual to a state of vitality and health, even in the presence of chronic illness." },
+            { term: "Illness, Ailment, and Disease", definition: "Illness: condition in which the body or mind is harmed. Ailment: an illness or health problem. Disease: a condition where the body or structure is harmed." },
+            { term: "Health-Illness Continuum", definition: "Health is visualized as a shifting point on a line (continuum) between wellness and illness." },
+            { term: "Healing, Curing & Recuperation", definition: "Healing: the process of becoming well again. Curing: making someone with an illness healthy again. Recuperation: the process of regaining strength after illness." },
+            { term: "Individual Perception of Health", definition: "Effect on perception of health due to cultural, social, and religious beliefs, which influence attitudes to illness and healthcare." },
+            { term: "Therapy and Therapeutic", definition: "Therapy: a treatment that helps someone feel better. Therapeutic: having a healing effect." },
+            { term: "Physical Environment", definition: "Includes warmth, diet, cleanliness, ventilation, light, and absence of noise." },
+            { term: "Psychological Environment", definition: "Includes family dynamics and how the patient interacts with stressors." },
+            { term: "Impact of the Environment on Patient Healing", definition: "Poor sanitation, living, and working conditions influence healing negatively." },
+            { term: "Therapeutic Environment", definition: "Therapeutic environments refer to physical, social, and psychological safe spaces designed to aid healing." }
+        ];
+        const mcqQuestions = [
+            { question: "What is the normal range of adult heart rate?", options: ["60-100 bpm", "40-80 bpm", "120-140 bpm", "90-110 bpm"], answer: "60-100 bpm" },
+            { question: "Which vitamin helps with blood clotting?", options: ["Vitamin A", "Vitamin D", "Vitamin K", "Vitamin C"], answer: "Vitamin K" },
+            { question: "What is the primary function of hemoglobin?", options: ["Transport oxygen", "Fight infections", "Regulate temperature", "Digest food"], answer: "Transport oxygen" },
+            { question: "What is the primary special need during the prenatal stage?", options: ["Bonding with parent/guardian", "Knowledge and support to create an environment conducive to fetal development", "Proper nutrition and hygiene", "Building sexual identity"], answer: "Knowledge and support to create an environment conducive to fetal development" },
+            { question: "Which of the following is a key special need during the neonatal stage?", options: ["Self-identity development", "Sexual education", "Bonding with parent/guardian and safety", "Health maintenance"], answer: "Bonding with parent/guardian and safety" },
+            { question: "Which of the following special needs is associated with infancy?", options: ["Emotional security and toilet training", "Continuous close contact with parent/guardian and proper nutrition", "Developing sexual identity", "Establishing a career and intimacy"], answer: "Continuous close contact with parent/guardian and proper nutrition" },
+            { question: "Which of the following is a special need during the toddler stage?", options: ["Building a personal philosophy", "Playing, sleep, and rest", "Peer and child–adult relationships", "Health education and maintenance"], answer: "Playing, sleep, and rest" },
+            { question: "Which of the following is a key special need during the preschool stage?", options: ["Learning basic skills such as balancing, drawing, and cutting", "Preparing for adult roles and relationships", "Building self-identity and emotional security", "Developing a personal philosophy and moral value system"], answer: "Learning basic skills such as balancing, drawing, and cutting" },
+            { question: "What special need is crucial during the school-age stage?", options: ["Sexual identity and education", "Establishing a career", "Development of social skills, self-identity, and physical growth", "Building lasting relationships with adults"], answer: "Development of social skills, self-identity, and physical growth" },
+            { question: "Which special need is most associated with the adolescent stage?", options: ["Establishing a career and intimacy", "Sexual identity education and developing a moral/value system", "Empowerment in community matters", "Building self-esteem and health education for elderly"], answer: "Sexual identity education and developing a moral/value system" },
+            { question: "What is a primary special need during the young adulthood stage?", options: ["Coping with loss and grief", "Achieving intimacy and establishing a career", "Sexual education and relationship building", "Health maintenance and rehabilitation"], answer: "Achieving intimacy and establishing a career" },
+            { question: "Which of the following is a key special need during the middle adulthood stage?", options: ["Increased interest in adult roles and self-identity", "Health education related to diet, exercise, and rest", "Empowerment in community matters and dealing with psychological changes", "Learning basic skills and emotional development"], answer: "Empowerment in community matters and dealing with psychological changes" },
+            { question: "What is the primary focus of nursing science, as defined by the South African Nursing Council?", options: ["The practice of treating mental illnesses", "The body of knowledge for diagnosing, treating, and providing personalized healthcare", "The development of medicines and vaccines", "The study of genetics and inheritance in patients"], answer: "The body of knowledge for diagnosing, treating, and providing personalized healthcare" },
+            { question: "Which of the following is NOT a characteristic of nursing theory?", options: ["Clear and logical description of concepts", "Relationships between concepts explained", "Usefulness in nursing education, research, and practice", "Focus on the economic aspects of healthcare"], answer: "Focus on the economic aspects of healthcare" },
+            { question: "Why are nursing theories important in practice?", options: ["They provide knowledge that is irrelevant to nursing care", "They promote problem-solving skills in nursing care", "They limit the scope of research and innovation", "They are used only in academic settings"], answer: "They promote problem-solving skills in nursing care" },
+            { question: "According to Virginia Henderson, which of the following is NOT one of the 14 basic needs in nursing care?", options: ["Breathing normally", "Worshiping according to the particular person’s faith", "Moving and maintaining posture", "Seeking financial independence"], answer: "Seeking financial independence" },
+            { question: "In the metaparadigm of nursing, which concept is described as the place or community where care is provided?", options: ["Person", "Health", "Environment", "Nursing"], answer: "Environment" },
+            { question: "According to Florence Nightingale, what is the role of nursing?", options: ["To provide medical treatment for patients", "To alter the environment to promote the patient’s own reparative processes", "To provide psychological counseling", "To prescribe medications for healing"], answer: "To alter the environment to promote the patient’s own reparative processes" },
+            { question: "Which of the following nursing theories emphasizes the need for environmental factors to maintain health and promote healing?", options: ["Self-Care Deficit Theory", "Goal Attainment Theory", "Nightingale’s Environmental Theory", "Maslow’s Hierarchy of Needs"], answer: "Nightingale’s Environmental Theory" },
+            { question: "What does the concept of 'Health' in nursing theory refer to?", options: ["The diagnosis of a disease", "The continuum from wellness to illness", "The level of physical fitness", "The interaction between nurse and patient"], answer: "The continuum from wellness to illness" },
+            { question: "According to Virginia Henderson, how should nurses assist individuals in performing health-related activities?", options: ["Nurses should perform all activities for the patients", "Nurses should encourage complete independence for patients", "Nurses should assist in performing activities to restore independence as soon as possible", "Nurses should avoid any interaction with patients"], answer: "Nurses should assist in performing activities to restore independence as soon as possible" },
+            { question: "What is one of the main advantages of having multiple theories in nursing practice?", options: ["It simplifies the practice of nursing", "It allows nursing phenomena to be examined from various angles and perspectives", "It prevents the use of theories from other disciplines", "It results in a singular, unified approach to patient care"], answer: "It allows nursing phenomena to be examined from various angles and perspectives" },
+            { question: "What are the four broad aims of nursing?", options: ["Prevent ill health, restore health, educate patients, and promote self-care", "Promote health, prevent ill health, restore health, and promote coping", "Diagnose diseases, provide treatments, educate patients, and conduct research", "Assist with medical procedures, provide emotional support, educate patients, and promote well-being"], answer: "Promote health, prevent ill health, restore health, and promote coping" },
+            { question: "Who described nursing as 'the act of utilising the environment of the patient to assist him in his recovery'?", options: ["Virginia Henderson", "Florence Nightingale", "The American Nurses' Association (ANA)", "Dorothea Orem"], answer: "Florence Nightingale" },
+            { question: "According to the South African Nursing Council, what is nursing science concerned with?", options: ["The treatment of individuals with physical illnesses only", "The development of knowledge for the diagnosis, treatment, and personalized healthcare of persons exposed to illness", "Only the preventive aspects of healthcare", "The management of hospitals and healthcare facilities"], answer: "The development of knowledge for the diagnosis, treatment, and personalized healthcare of persons exposed to illness" },
+            { question: "What does nursing theory provide for nurses?", options: ["A set of procedures to follow during each nursing practice", "Rational, knowledgeable reasons for actions based on organized written descriptions of the reality of nursing", "Guidelines for financial management in healthcare settings", "Technical instructions for operating medical equipment"], answer: "Rational, knowledgeable reasons for actions based on organized written descriptions of the reality of nursing" },
+            { question: "Which of the following is a characteristic of nursing theory?", options: ["It is highly specialized to one field of practice", "It has no relevance in clinical situations", "It provides a clear, logical description of concepts specific to nursing", "It is only applicable to advanced nursing practice"], answer: "It provides a clear, logical description of concepts specific to nursing" },
+            { question: "What are the four key concepts of the metaparadigm of nursing?", options: ["Person, Family, Community, and Environment", "Person, Health, Environment, and Nursing", "Diagnosis, Treatment, Recovery, and Wellness", "Patient, Disease, Cure, and Prevention"], answer: "Person, Health, Environment, and Nursing" },
+            { question: "How did Florence Nightingale define nursing?", options: ["As a practice focused on patient medication", "As the act of utilizing the environment to assist in patient recovery", "As providing emotional and mental support to patients", "As a system to manage patient records and hospital administration"], answer: "As the act of utilizing the environment to assist in patient recovery" },
+            { question: "What is the primary role of nursing according to Virginia Henderson’s definition?", options: ["To treat patients with medical procedures", "To help individuals perform activities that contribute to health and recovery", "To focus on the technical aspects of healthcare", "To manage hospital resources and staff"], answer: "To help individuals perform activities that contribute to health and recovery" },
+            { question: "Which of the following is NOT one of the 14 basic needs outlined by Virginia Henderson?", options: ["Breathing normally", "Promoting development and health", "Managing hospital operations", "Communicating to express emotions, needs, and opinions"], answer: "Managing hospital operations" },
+            { question: "What does the systems theory in nursing emphasize?", options: ["The financial aspects of healthcare", "The interdependence and goal-orientation of systems", "The emotional well-being of patients", "The specialization of different healthcare disciplines"], answer: "The interdependence and goal-orientation of systems" },
+            { question: "Who emphasized the importance of promoting patients' independence even after hospitalization?", options: ["Martha Rogers", "Betty Neumann", "Virginia Henderson", "Dorothea Orem"], answer: "Virginia Henderson" },
+            { question: "According to Martha Rogers, health and illness are:", options: ["Separate and unconnected", "Opposites of each other", "On the same continuum", "Fixed states"], answer: "On the same continuum" },
+            { question: "What is the focus of Betty Neumann’s systems theory?", options: ["Genetic factors affecting health", "Interaction between agents, hosts, and the environment", "Spiritual health and wellness", "The importance of nursing interventions"], answer: "Interaction between agents, hosts, and the environment" },
+            { question: "The Agent-Host-Environment model is especially valuable in:", options: ["General healthcare practice", "Community healthcare and epidemiology", "Spiritual health promotion", "Individual patient care management"], answer: "Community healthcare and epidemiology" },
+            { question: "In the Health Belief Model, the perceived seriousness of a disease concerns:", options: ["The genetic causes of the disease", "The physical, social, and financial consequences of the disease", "The prevention measures for the disease", "The symptoms experienced by the patient"], answer: "The physical, social, and financial consequences of the disease" }
+        ];
+
+        const notes = [
+            { title: "Basic Anatomy", summary: "A brief overview of human body systems and their functions." },
+            { title: "Medical Terminology", summary: "Commonly used terms in healthcare and their meanings." },
+            { title: "Nursing Skills", summary: "Key skills required for effective patient care, including communication and technical skills." },
+            { title: "Patient Care", summary: "A guide to providing quality care, including assessment and intervention." },
+            { title: "Pharmacology", summary: "Understanding medications, their effects, and dosage administration." },
+            { title: "Medical Ethics", summary: "An overview of the ethical principles governing healthcare practices." },
+            { title: "Habits for Healthy Disposition", summary: "Key habits to maintain a healthy lifestyle, including avoiding smoking, eating a balanced diet, exercising, managing stress, and more." },
+            { title: "Health–Ill Health Continuum", summary: "Health is traditionally seen in relation to illness. The role of nurses is to promote health and manage illness, helping patients at various stages of health and illness, influenced by personal experiences and cultural contexts." },
+            { title: "Nursing and Florence Nightingale", summary: "Florence Nightingale is credited with founding modern nursing and defining the role of the nurse in healthcare, linking nursing practice to the health status of patients." },
+            { title: "Impact of Globalization on Health", summary: "The interconnectedness of the world, facilitated by technology, travel, and migration, influences global health. For example, diseases like malaria may spread to new regions due to changing climates and migration patterns." },
+            { title: "Virginia Henderson", summary: "Henderson emphasized the importance of promoting patients' independence even after hospitalization. She defined the nurse’s role as assisting individuals in activities that promote health when they are willing and able, with the goal of retaining or regaining health, or dying peacefully." },
+            { title: "Martha Rogers", summary: "Rogers viewed nursing as the creative and imaginative use of knowledge. She believed nursing promotes the interaction between the environment and the person to enhance human integrity and maximize health potential, considering health and illness as part of a continuum." },
+            { title: "Betty Neumann", summary: "Neumann's systems theory suggests that living organisms interact with their environment. Health is seen as a continuum between wellness and illness, where wellness is achieved when all needs are met, and unmet needs lead to illness. Health status may shift based on environmental factors." },
+            { title: "Dimensions of Wellness", summary: "Wellness is a holistic concept that includes multiple dimensions: Physical (exercise, nutrition, self-care), Psychological (expectation of positive outcomes), Social (relationships with others and the community), Intellectual (engagement in learning and critical thinking), and Spiritual (purpose and meaning in life)." },
+            { title: "Nursing and the Nursing Profession", summary: "The definition of nursing has evolved beyond nurturing the sick to a professional field focused on promoting health, preventing illness, restoring health, and helping individuals cope with health challenges. Florence Nightingale described nursing as 'the act of utilizing the environment of the patient to assist in their recovery.'" },
+            { title: "Nursing Science", summary: "Nursing theory is a systematic framework of concepts and propositions that describe, explain, predict, and guide nursing practice. It provides the foundation for nursing knowledge, enhances patient care, and supports research and education." },
+            { title: "Growth Stage: Prenatal (Conception to Birth)", summary: "Special Needs: Need for knowledge and support to create an environment conducive to fetal development." },
+            { title: "Growth Stage: Neonatal (Birth to 28 Days)", summary: "Special Needs: Bonding with parent/guardian (parenting skills), Safety and communication to build trust, Security and inclusion within family." },
+            { title: "Growth Stage: Infancy (Up to 1 Year)", summary: "Special Needs: Continuous close contact with parent/guardian, Proper nutrition, hygiene, and skin care, Sleep, rest, skills development, and play, Infection prevention and treatment." },
+            { title: "Growth Stage: Toddler (1–3 Years)", summary: "Special Needs: Playing, sleep, and rest, Emotional security and nutrition, Safety, psychosocial development, hygiene, and dental care, Infection control and toilet training." },
+            { title: "Growth Stage: Preschool (3–6 Years)", summary: "Special Needs: Basic skill learning (balancing, drawing, throwing, cutting, exercise, counting, imitating), Health maintenance and safety, Emotional, moral, and cognitive development (self-esteem), Sleep and rest." },
+            { title: "Growth Stage: School Age (6–12 Years)", summary: "Special Needs: Sexual awareness, social skills, and self-identity, Peer and child–adult relationships, perceptual growth, Preparation for adult roles and physical, cognitive, social, and mental development, Acceptance, communication, mobility, love, friendship, accident, and infection prevention." },
+            { title: "Growth Stage: Adolescence (12–20 Years)", summary: "Special Needs: Sexual identity and education, Reduced involvement with family, more focus on peers, school, and workplace, Building personal philosophy and moral/value system, Coping with stress, appearance, cognitive, sexual, spiritual, and communication relationships, Health education, social responsibility, and maintenance of health." },
+            { title: "Growth Stage: Young Adulthood (20–40 Years)", summary: "Special Needs: Equilibrium in social activities, Establishing a career, increased self-identity, and achieving intimacy, Health education (diet, exercise, rest), addressing incidental health needs, sexual and reproductive health, Adjustment to various life changes." },
+            { title: "Growth Stage: Middle Adulthood (40–65 Years and Above)", summary: "Special Needs: Empowerment in community matters, Addressing surgical, medical, and chronic health needs, Sexual needs, menopause, and post-menopause, Psychological and spiritual needs (empty-nest syndrome, changed relationship patterns, loss, and grief), Lifestyle changes, ill health recognition, health maintenance, rehabilitation, and ongoing health needs." }
+        ];
+
+        let defIndex = 0;
+        let mcqIndex = 0;
+        let notesIndex = 0;
+
+        function loadQuestion() {
+            let q = definitions[defIndex];
+            document.getElementById("question").innerText = q.term;
+            document.getElementById("answer").innerText = q.definition;
+            document.getElementById("flashcard").classList.remove("flipped");
+
+            // Cycle through definitions
+            defIndex = (defIndex + 1) % definitions.length;
+        }
+
+        function enableContainer(container) {
+            // Disable each input, button, and select inside the container
+            const elements = container.querySelectorAll("input, button, select");
+            elements.forEach(function (element) {
+                element.disabled = false;
+            });
+        }
+
+        function disableContainer(container) {
+            // Disable each input, button, and select inside the container
+            const elements = container.querySelectorAll("input, button, select");
+            elements.forEach(function (element) {
+                if (!element.classList.contains("btn-success")){
+                    element.disabled = true;
+                }
+            });
+        }
+
+        function loadMCQ() {
+            let q = mcqQuestions[mcqIndex];
+            document.getElementById("mcq-question").innerText = q.question;
+            let optionsContainer = document.getElementById("mcq-options");
+            optionsContainer.innerHTML = "";
+            enableContainer(optionsContainer);
+
+            q.options.sort(() => Math.random() - 0.5);
+            q.options.forEach(option => {
+                let button = document.createElement("button");
+                button.innerText = option;
+                button.className = "btn btn-outline-primary btn-option";
+                button.onclick = () => checkAnswer(option, q.answer, button, optionsContainer);
+                optionsContainer.appendChild(button);
+            });
+
+            // Cycle through MCQs
+            mcqIndex = (mcqIndex + 1) % mcqQuestions.length;
+        }
+
+        function loadNotes() {
+            let note = notes[Math.floor(Math.random() * notes.length)];
+            document.getElementById("notes-title").innerText = note.title;
+            document.getElementById("notes-summary").innerText = note.summary;
+        }
+
+        function checkAnswer(selected, correct, button, container) {
+            button.classList.add(selected === correct ? "btn-success" : "btn-danger");
+            if (selected === correct) {
+                disableContainer(container);
+                triggerConfetti();
+            }
+        }
+
+        function flipCard() {
+            document.getElementById("flashcard").classList.toggle("flipped");
+        }
+
+        function showDefinitions() {
+            document.querySelector(".definitions-container").style.display = "block";
+            document.querySelector(".mcq-container").style.display = "none";
+            document.querySelector(".notes-container").style.display = "none";
+            document.getElementById("btn-definitions").classList.add("active");
+            document.getElementById("btn-mcq").classList.remove("active");
+            document.getElementById("btn-notes").classList.remove("active");
+            loadQuestion();
+        }
+
+        function showMCQ() {
+            document.querySelector(".definitions-container").style.display = "none";
+            document.querySelector(".mcq-container").style.display = "block";
+            document.querySelector(".notes-container").style.display = "none";
+            document.getElementById("btn-mcq").classList.add("active");
+            document.getElementById("btn-definitions").classList.remove("active");
+            document.getElementById("btn-notes").classList.remove("active");
+            loadMCQ();
+        }
+
+        function showNotes() {
+            document.querySelector(".definitions-container").style.display = "none";
+            document.querySelector(".mcq-container").style.display = "none";
+            document.querySelector(".notes-container").style.display = "block";
+            document.getElementById("btn-notes").classList.add("active");
+            document.getElementById("btn-definitions").classList.remove("active");
+            document.getElementById("btn-mcq").classList.remove("active");
+            loadNotes();
+        }
+
+        // Confetti trigger function
+function triggerConfetti() {
+    // This will create a confetti effect in the center of the screen
+    confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { x: 0.5, y: 0.5 }, // Origin is centered
+        colors: ['#ff0', '#0f0', '#00f', '#f00', '#0ff'], // Optional colors
+    });
+}
+
+        showDefinitions();
+    </script>
+</body>
+
+</html>
